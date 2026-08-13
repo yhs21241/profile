@@ -1,23 +1,21 @@
 name: Sync from normal-character
 
 on:
-  workflow_dispatch:          # 手动触发
+  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'       # 每天 UTC 0 点自动运行
+    - cron: '0 0 * * *'
 
 jobs:
   sync:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 拉取你自己的仓库（目标仓库）
       - name: Checkout your repo
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GHPAT }}
           path: target
 
-      # 2. 拉取源仓库（Muoan/normal-character）
       - name: Checkout source repo
         uses: actions/checkout@v4
         with:
@@ -25,26 +23,28 @@ jobs:
           token: ${{ secrets.GHPAT }}
           path: source
 
-      # 3. 拷贝源仓库所有内容到 target/profile/
-      - name: Copy files
+      # 🟟 这是修改后的步骤，加入了安全检查
+      - name: Copy files with safety check
         run: |
+          # 1️⃣ 检查源仓库是否为空（排除 .git 目录）
+          SOURCE_CONTENT=$(ls -A ../source --ignore=.git)
+          if [ -z "$SOURCE_CONTENT" ]; then
+            echo "⚠️  Source repository is empty or only has .git, skipping sync to avoid deleting your files."
+            exit 0
+          fi
+
+          # 2️⃣ 源非空，执行同步
           cd target
-          # 如果 profile 文件夹不存在则创建
           mkdir -p profile
-          # 清空 profile 下原有内容（避免残留旧文件）
           rm -rf profile/*
-          # 拷贝源仓库所有内容（包括隐藏文件）到 profile/
           cp -r ../source/* profile/ 2>/dev/null || true
-          # 拷贝隐藏文件（如 .gitignore 等）
           cp -r ../source/.[!.]* profile/ 2>/dev/null || true
 
-      # 4. 提交并推送变更
       - name: Commit and push
         run: |
           cd target
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
-          # 如果有变更则提交，否则跳过
           git diff --staged --quiet || git commit -m "Sync from Muoan/normal-character $(date +'%Y-%m-%d')"
           git push
