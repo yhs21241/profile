@@ -1,0 +1,16 @@
+name: Sync Files
+on:
+  workflow_dispatch:  # 允许你手动点击运行（用于测试）
+  schedule:
+    - cron: '0 0 * * *'  # 每天 UTC 时间 0 点自动同步一次
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@main
+      - name: Run GitHub File Sync
+        uses: step-security/repo-file-sync-action@v1
+        with:
+          GH_PAT: ${{ secrets.GHPAT }}  # 注意这里引用的名字是 GHPAT
