@@ -1,0 +1,4 @@
+# 将源仓库根目录的所有内容，同步到本仓库的 profile 文件夹
+- source: /
+  dest: profile/
+  repo: Muoan/normal-character
