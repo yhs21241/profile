@@ -8,8 +8,19 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
+      # 🟟 插入这一段，专门用来检查 Secret 是否存在
+      - name: Check secret exists
+        run: |
+          if [ -z "${{ secrets.GHPAT }}" ]; then
+            echo "❌ Secret GHPAT is empty or not set!"
+            exit 1
+          else
+            echo "✅ Secret GHPAT is set successfully!"
+          fi
+      
       - name: Checkout Repository
         uses: actions/checkout@main
+      # ... 后面的原内容保持不变
       - name: Run GitHub File Sync
         uses: step-security/repo-file-sync-action@v1
         with:
