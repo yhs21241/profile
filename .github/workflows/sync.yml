@@ -23,17 +23,18 @@ jobs:
           token: ${{ secrets.GHPAT }}
           path: source
 
-      # 🟟 这是修改后的步骤，加入了安全检查
       - name: Copy files with safety check
         run: |
-          # 1️⃣ 检查源仓库是否为空（排除 .git 目录）
-          SOURCE_CONTENT=$(ls -A ../source --ignore=.git)
+          if [ ! -d source ]; then
+            echo "❌ Source directory 'source' not found, skipping sync."
+            exit 1
+          fi
+          SOURCE_CONTENT=$(ls -A source --ignore=.git 2>/dev/null)
           if [ -z "$SOURCE_CONTENT" ]; then
             echo "⚠️  Source repository is empty or only has .git, skipping sync to avoid deleting your files."
             exit 0
           fi
 
-          # 2️⃣ 源非空，执行同步
           cd target
           mkdir -p profile
           rm -rf profile/*
